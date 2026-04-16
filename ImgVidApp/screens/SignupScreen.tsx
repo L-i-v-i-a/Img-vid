@@ -30,7 +30,7 @@ export default function SignupScreen({ navigation }: any) {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join Innovempia to start animating with AI</Text>
+        <Text style={styles.subtitle}>Join IMG-VID to start animating with AI</Text>
 
         <TextInput
           label="Full Name"
