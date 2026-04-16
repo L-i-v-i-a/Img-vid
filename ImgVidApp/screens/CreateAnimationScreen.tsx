@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, ScrollView } from 'react-native';
-import { Button, TextInput, Card, Text, Portal, Modal, ActivityIndicator } from 'react-native-paper';
+import { Button, TextInput, Card, Text, Portal, Modal, ActivityIndicator, Appbar } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function CreateAnimationScreen({ navigation }: any) {
@@ -49,9 +49,14 @@ export default function CreateAnimationScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Create Animation</Text>
+    <View style={styles.container}>
+      <Appbar.Header>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="#6200ee" />
+        <Appbar.Content title="Create Animation" />
+      </Appbar.Header>
+      
+      <ScrollView style={styles.content}>
+        <View style={styles.innerContent}>
         
         <Card style={styles.card}>
           <Card.Content>
@@ -108,13 +113,15 @@ export default function CreateAnimationScreen({ navigation }: any) {
           </View>
         </Modal>
       </Portal>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  content: { padding: 20 },
+  content: { flex: 1 },
+  innerContent: { padding: 20 },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 30 },
   card: { marginBottom: 20 },
   cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
