@@ -12,7 +12,7 @@ export default function SplashScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logoText}>INNOVEMPIA</Text>
+      <Text style={styles.logoText}>IMG-VID</Text>
       <Text style={styles.subText}>AI Video Generation Engine</Text>
       <ActivityIndicator animating={true} color="#6200ee" size="large" style={{ marginTop: 20 }} />
     </View>

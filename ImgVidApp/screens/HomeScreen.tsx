@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Image } from 'react-native';
 import { FAB, Card, Text, Appbar } from 'react-native-paper';
-import * as ImagePicker from 'expo-image-picker';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation, route }: any) {
   // Mock data for history (This will come from your Django Backend)
   const [history, setHistory] = useState([
     { id: '1', prompt: 'Logo Animation: Zoom In', date: '2026-03-24', status: 'Completed' },
     { id: '2', prompt: 'Hospital Interior: 3D Pan', date: '2026-03-23', status: 'Completed' },
   ]);
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-    // logic to upload to Django goes here
-  };
+  // Add new animation to history when coming from CreateAnimationScreen
+  useEffect(() => {
+    if (route.params?.newAnimation) {
+      setHistory(prevHistory => [route.params.newAnimation, ...prevHistory]);
+      // Clear the params to avoid adding duplicates
+      navigation.setParams({ newAnimation: undefined });
+    }
+  }, [route.params?.newAnimation, navigation]);
 
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
+        <Appbar.Action icon="account-circle" onPress={() => navigation.navigate('Profile')} />
         <Appbar.Content title="My AI Studio" />
       </Appbar.Header>
 
@@ -39,7 +39,7 @@ export default function HomeScreen() {
         )}
       />
 
-      <FAB icon="plus" style={styles.fab} label="New Animation" onPress={pickImage} />
+      <FAB icon="plus" style={styles.fab} label="New Animation" onPress={() => navigation.navigate('CreateAnimation')} />
     </View>
   );
 }
