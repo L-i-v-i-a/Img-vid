@@ -15,7 +15,7 @@ export default function ProfileScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="#6200ee" />
         <Appbar.Content title="Profile" />
       </Appbar.Header>
 

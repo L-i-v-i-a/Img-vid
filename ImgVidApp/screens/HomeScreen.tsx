@@ -21,7 +21,7 @@ export default function HomeScreen({ navigation, route }: any) {
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
-        <Appbar.Action icon="account-circle" onPress={() => navigation.navigate('Profile')} />
+        <Appbar.Action icon="account-circle" onPress={() => navigation.navigate('Profile')} color="#6200ee" />
         <Appbar.Content title="My AI Studio" />
       </Appbar.Header>
 
