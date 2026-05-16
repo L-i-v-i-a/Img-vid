@@ -1,96 +1,333 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Appbar, Card, Text, Avatar, Button, Divider, List } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from 'react-native';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {
+  Appbar,
+  Card,
+  Text,
+  Avatar,
+  Button,
+  Divider,
+  List,
+  ActivityIndicator,
+} from 'react-native-paper';
+
+const BASE_URL = 'https://backend-img-vid.onrender.com';
 
 export default function ProfileScreen({ navigation }: any) {
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    joinDate: 'January 2024',
-    totalAnimations: 12,
-    completedAnimations: 10,
-    pendingAnimations: 2
+  const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState({
+    name: '',
+    username: '',
+    email: '',
+  });
+
+  const [history, setHistory] = useState<any[]>([]);
+
+  // ==========================================
+  // LOAD PROFILE + HISTORY
+  // ==========================================
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem('token');
+
+      if (!token) {
+        Alert.alert('Session Expired', 'Please login again');
+
+        navigation.replace('Login');
+        return;
+      }
+
+      // ==========================================
+      // GET PROFILE
+      // ==========================================
+
+      const profileResponse = await fetch(
+        `${BASE_URL}/profile`,
+        {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const profileData = await profileResponse.json();
+
+      if (!profileResponse.ok) {
+        Alert.alert(
+          'Error',
+          profileData.detail || 'Failed to load profile'
+        );
+        return;
+      }
+
+      setUser(profileData.user);
+
+      // ==========================================
+      // GET HISTORY
+      // ==========================================
+
+      const historyResponse = await fetch(
+        `${BASE_URL}/history`,
+        {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const historyData = await historyResponse.json();
+
+      if (!historyResponse.ok) {
+        Alert.alert(
+          'Error',
+          historyData.detail || 'Failed to load history'
+        );
+        return;
+      }
+
+      setHistory(historyData.videos || []);
+    } catch (error) {
+      console.log(error);
+
+      Alert.alert(
+        'Error',
+        'Something went wrong'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // ==========================================
+  // LOGOUT
+  // ==========================================
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+
+      navigation.replace('Login');
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="large"
+          color="#6200ee"
+        />
+
+        <Text style={{ marginTop: 10 }}>
+          Loading profile...
+        </Text>
+      </View>
+    );
+  }
+
+  // ==========================================
+  // COMPLETED COUNT
+  // ==========================================
+
+  const completedAnimations = history.length;
 
   return (
     <View style={styles.container}>
       <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} color="#6200ee" />
+        <Appbar.BackAction
+          onPress={() => navigation.goBack()}
+          color="#6200ee"
+        />
+
         <Appbar.Content title="Profile" />
       </Appbar.Header>
 
       <ScrollView style={styles.content}>
-        {/* Profile Header */}
+        {/* ========================================== */}
+        {/* PROFILE HEADER */}
+        {/* ========================================== */}
+
         <Card style={styles.profileCard}>
           <Card.Content style={styles.profileHeader}>
-            <Avatar.Text size={80} label={user.name.charAt(0)} style={styles.avatar} />
+            <Avatar.Text
+              size={80}
+              label={user.name?.charAt(0) || 'U'}
+              style={styles.avatar}
+            />
+
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
-              <Text style={styles.userEmail}>{user.email}</Text>
-              <Text style={styles.joinDate}>Member since {user.joinDate}</Text>
+              <Text style={styles.userName}>
+                {user.name}
+              </Text>
+
+              <Text style={styles.username}>
+                @{user.username}
+              </Text>
+
+              <Text style={styles.userEmail}>
+                {user.email}
+              </Text>
             </View>
           </Card.Content>
         </Card>
 
-        {/* Statistics */}
+        {/* ========================================== */}
+        {/* STATS */}
+        {/* ========================================== */}
+
         <Card style={styles.statsCard}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>Animation Statistics</Text>
+            <Text style={styles.sectionTitle}>
+              Animation Statistics
+            </Text>
+
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{user.totalAnimations}</Text>
-                <Text style={styles.statLabel}>Total</Text>
+                <Text style={styles.statNumber}>
+                  {history.length}
+                </Text>
+
+                <Text style={styles.statLabel}>
+                  Total
+                </Text>
               </View>
+
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{user.completedAnimations}</Text>
-                <Text style={styles.statLabel}>Completed</Text>
+                <Text style={styles.statNumber}>
+                  {completedAnimations}
+                </Text>
+
+                <Text style={styles.statLabel}>
+                  Completed
+                </Text>
               </View>
+
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{user.pendingAnimations}</Text>
-                <Text style={styles.statLabel}>Pending</Text>
+                <Text style={styles.statNumber}>
+                  {history.length > 0 ? 'AI' : '0'}
+                </Text>
+
+                <Text style={styles.statLabel}>
+                  Generated
+                </Text>
               </View>
             </View>
           </Card.Content>
         </Card>
 
-        {/* Settings Menu */}
+        {/* ========================================== */}
+        {/* HISTORY */}
+        {/* ========================================== */}
+
+        <Card style={styles.historyCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>
+              Recent Animations
+            </Text>
+
+            {history.length === 0 ? (
+              <Text style={styles.emptyText}>
+                No animations generated yet
+              </Text>
+            ) : (
+              history.map((item, index) => (
+                <View key={index}>
+                  <List.Item
+                    title={`Motion: ${item.motion}`}
+                    description={`Frames: ${item.frames}`}
+                    left={(props) => (
+                      <List.Icon
+                        {...props}
+                        icon="video"
+                      />
+                    )}
+                    right={() => (
+                      <Text style={styles.statusText}>
+                        Completed
+                      </Text>
+                    )}
+                  />
+
+                  <Divider />
+                </View>
+              ))
+            )}
+          </Card.Content>
+        </Card>
+
+        {/* ========================================== */}
+        {/* SETTINGS */}
+        {/* ========================================== */}
+
         <Card style={styles.menuCard}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>Settings</Text>
+            <Text style={styles.sectionTitle}>
+              Settings
+            </Text>
+
             <List.Item
-              title="Edit Profile"
-              description="Update your personal information"
-              left={(props) => <List.Icon {...props} icon="account-edit" />}
-              onPress={() => console.log('Edit profile pressed')}
+              title="Refresh Profile"
+              description="Reload your profile information"
+              left={(props) => (
+                <List.Icon
+                  {...props}
+                  icon="refresh"
+                />
+              )}
+              onPress={loadProfile}
             />
+
             <Divider />
+
             <List.Item
-              title="Notifications"
-              description="Manage notification preferences"
-              left={(props) => <List.Icon {...props} icon="bell" />}
-              onPress={() => console.log('Notifications pressed')}
-            />
-            <Divider />
-            <List.Item
-              title="Privacy Settings"
-              description="Control your privacy and data"
-              left={(props) => <List.Icon {...props} icon="shield-account" />}
-              onPress={() => console.log('Privacy pressed')}
-            />
-            <Divider />
-            <List.Item
-              title="Help & Support"
-              description="Get help and contact support"
-              left={(props) => <List.Icon {...props} icon="help-circle" />}
-              onPress={() => console.log('Help pressed')}
+              title="Create Animation"
+              description="Generate a new AI animation"
+              left={(props) => (
+                <List.Icon
+                  {...props}
+                  icon="plus-circle"
+                />
+              )}
+              onPress={() =>
+                navigation.navigate(
+                  'CreateAnimation'
+                )
+              }
             />
           </Card.Content>
         </Card>
 
-        {/* Logout Button */}
-        <Button 
-          mode="outlined" 
-          onPress={() => console.log('Logout pressed')}
+        {/* ========================================== */}
+        {/* LOGOUT */}
+        {/* ========================================== */}
+
+        <Button
+          mode="outlined"
+          onPress={handleLogout}
           style={styles.logoutButton}
           textColor="#d32f2f"
         >
@@ -101,22 +338,120 @@ export default function ProfileScreen({ navigation }: any) {
   );
 }
 
+// ==========================================
+// STYLES
+// ==========================================
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  content: { padding: 20 },
-  profileCard: { marginBottom: 20 },
-  profileHeader: { alignItems: 'center', paddingVertical: 20 },
-  avatar: { marginBottom: 15 },
-  userInfo: { alignItems: 'center' },
-  userName: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },
-  userEmail: { fontSize: 16, color: 'gray', marginBottom: 5 },
-  joinDate: { fontSize: 14, color: '#757575' },
-  statsCard: { marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  statItem: { alignItems: 'center' },
-  statNumber: { fontSize: 24, fontWeight: 'bold', color: '#6200ee' },
-  statLabel: { fontSize: 14, color: 'gray', marginTop: 5 },
-  menuCard: { marginBottom: 20 },
-  logoutButton: { marginTop: 20, marginBottom: 30 }
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+
+  content: {
+    padding: 20,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  profileCard: {
+    marginBottom: 20,
+    borderRadius: 15,
+  },
+
+  profileHeader: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+
+  avatar: {
+    marginBottom: 15,
+    backgroundColor: '#6200ee',
+  },
+
+  userInfo: {
+    alignItems: 'center',
+  },
+
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+
+  username: {
+    fontSize: 16,
+    color: '#6200ee',
+    marginBottom: 5,
+  },
+
+  userEmail: {
+    fontSize: 16,
+    color: 'gray',
+  },
+
+  statsCard: {
+    marginBottom: 20,
+    borderRadius: 15,
+  },
+
+  historyCard: {
+    marginBottom: 20,
+    borderRadius: 15,
+  },
+
+  menuCard: {
+    marginBottom: 20,
+    borderRadius: 15,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+
+  statItem: {
+    alignItems: 'center',
+  },
+
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#6200ee',
+  },
+
+  statLabel: {
+    fontSize: 14,
+    color: 'gray',
+    marginTop: 5,
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    color: 'gray',
+    marginTop: 10,
+  },
+
+  statusText: {
+    color: 'green',
+    alignSelf: 'center',
+    marginRight: 10,
+    fontWeight: 'bold',
+  },
+
+  logoutButton: {
+    marginTop: 10,
+    marginBottom: 40,
+    borderColor: '#d32f2f',
+  },
 });
