@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-
 import {
   View,
   FlatList,
@@ -23,21 +22,13 @@ import {
 
 const BASE_URL = 'https://backend-img-vid.onrender.com';
 
-export default function HomeScreen({
-  navigation,
-}: any) {
-
-  // ==========================================
-  // STATES
-  // ==========================================
-
+export default function HomeScreen({ navigation }: any) {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ==========================================
   // LOAD HISTORY
   // ==========================================
-
   useEffect(() => {
     loadHistory();
   }, []);
@@ -46,56 +37,32 @@ export default function HomeScreen({
     try {
       setLoading(true);
 
-      const token = await AsyncStorage.getItem(
-        'token'
-      );
+      const token = await AsyncStorage.getItem('token');
 
       if (!token) {
-        Alert.alert(
-          'Session Expired',
-          'Please login again'
-        );
-
+        Alert.alert('Session Expired', 'Please login again');
         navigation.replace('Login');
-
         return;
       }
 
-      const response = await fetch(
-        `${BASE_URL}/history`,
-        {
-          method: 'GET',
-          headers: {
-            authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/history`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert(
-          'Error',
-          data.detail || 'Failed to load history'
-        );
-
+        Alert.alert('Error', data.detail || 'Failed to load history');
         return;
       }
 
-      // Reverse latest first
-      const formattedHistory = (
-        data.videos || []
-      ).reverse();
-
-      setHistory(formattedHistory);
-
+      setHistory((data.videos || []).reverse());
     } catch (error) {
       console.log(error);
-
-      Alert.alert(
-        'Error',
-        'Something went wrong'
-      );
+      Alert.alert('Error', 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -104,12 +71,8 @@ export default function HomeScreen({
   // ==========================================
   // OPEN VIDEO
   // ==========================================
-
-  const openVideo = async (
-    videoPath: string
-  ) => {
+  const openVideo = async (videoPath: string) => {
     try {
-
       let cleanPath = videoPath;
 
       if (cleanPath.startsWith('/')) {
@@ -117,34 +80,21 @@ export default function HomeScreen({
       }
 
       const fullUrl = `${BASE_URL}/${cleanPath}`;
-
-      await Linking.openURL(fullUrl);
-
+      await Linking.openURL(encodeURI(fullUrl));
     } catch (error) {
-      Alert.alert(
-        'Error',
-        'Could not open video'
-      );
+      Alert.alert('Error', 'Could not open video');
     }
   };
 
   // ==========================================
   // DELETE VIDEO
   // ==========================================
-
-  const deleteVideo = async (
-    videoPath: string
-  ) => {
+  const deleteVideo = async (videoPath: string) => {
     try {
-
-      const token = await AsyncStorage.getItem(
-        'token'
-      );
-
+      const token = await AsyncStorage.getItem('token');
       if (!token) return;
 
-      const videoName =
-        videoPath.split('/').pop();
+      const videoName = videoPath.split('/').pop();
 
       const response = await fetch(
         `${BASE_URL}/delete-video/${videoName}`,
@@ -159,46 +109,26 @@ export default function HomeScreen({
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert(
-          'Error',
-          data.detail || 'Delete failed'
-        );
-
+        Alert.alert('Error', data.detail || 'Delete failed');
         return;
       }
 
-      Alert.alert(
-        'Success',
-        'Video deleted successfully'
-      );
-
+      Alert.alert('Success', 'Video deleted successfully');
       loadHistory();
-
     } catch (error) {
       console.log(error);
-
-      Alert.alert(
-        'Error',
-        'Failed to delete video'
-      );
+      Alert.alert('Error', 'Failed to delete video');
     }
   };
 
   // ==========================================
-  // LOADING
+  // LOADING SCREEN
   // ==========================================
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator
-          size="large"
-          color="#6200ee"
-        />
-
-        <Text style={{ marginTop: 10 }}>
-          Loading animations...
-        </Text>
+        <ActivityIndicator size="large" color="#6200ee" />
+        <Text style={{ marginTop: 10 }}>Loading animations...</Text>
       </View>
     );
   }
@@ -206,49 +136,29 @@ export default function HomeScreen({
   // ==========================================
   // UI
   // ==========================================
-
   return (
     <View style={styles.container}>
-
-      {/* ========================================== */}
       {/* APPBAR */}
-      {/* ========================================== */}
-
       <Appbar.Header>
-
         <Appbar.Action
           icon="account-circle"
-          onPress={() =>
-            navigation.navigate('Profile')
-          }
+          onPress={() => navigation.navigate('Profile')}
           color="#6200ee"
         />
 
         <Appbar.Content title="My AI Studio" />
 
-        <Appbar.Action
-          icon="refresh"
-          onPress={loadHistory}
-        />
+        <Appbar.Action icon="refresh" onPress={loadHistory} />
       </Appbar.Header>
 
-      {/* ========================================== */}
-      {/* HISTORY */}
-      {/* ========================================== */}
-
+      {/* HISTORY LIST */}
       <FlatList
         data={history}
-
-        keyExtractor={(item, index) =>
-          index.toString()
-        }
+        keyExtractor={(item, index) => index.toString()}
 
         ListHeaderComponent={
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>
-              Generation History
-            </Text>
-
+            <Text style={styles.header}>Generation History</Text>
             <Text style={styles.subHeader}>
               Your AI generated animations
             </Text>
@@ -257,10 +167,7 @@ export default function HomeScreen({
 
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              No animations yet
-            </Text>
-
+            <Text style={styles.emptyText}>No animations yet</Text>
             <Text style={styles.emptySubText}>
               Create your first AI animation
             </Text>
@@ -268,15 +175,11 @@ export default function HomeScreen({
         }
 
         renderItem={({ item }) => (
-
           <Card style={styles.card}>
-
             <Card.Content>
-
+              {/* TOP INFO */}
               <View style={styles.cardTop}>
-
                 <View style={{ flex: 1 }}>
-
                   <Text style={styles.motionText}>
                     Motion: {item.motion}
                   </Text>
@@ -284,39 +187,38 @@ export default function HomeScreen({
                   <Text style={styles.framesText}>
                     Frames: {item.frames}
                   </Text>
-
                 </View>
 
-                <Chip
-                  icon="check-circle"
-                  style={styles.completedChip}
-                >
+                <Chip icon="check-circle" style={styles.completedChip}>
                   Completed
                 </Chip>
-
               </View>
 
-              {/* IMAGE PREVIEW */}
-
-              {item.image_path && (
+              {/* IMAGE (FIXED & SAFE) */}
+              {item.image_path ? (
                 <Image
                   source={{
-                    uri: `${BASE_URL}/${item.image_path}`,
+                    uri: item.image_path.startsWith('http')
+                      ? item.image_path
+                      : `${BASE_URL}/${item.image_path.replace(/^\/+/, '')}`,
                   }}
                   style={styles.previewImage}
+                  onError={() =>
+                    console.log('Image failed:', item.image_path)
+                  }
                 />
+              ) : (
+                <Text style={{ marginTop: 10, color: 'gray' }}>
+                  No image preview
+                </Text>
               )}
 
-              {/* ACTION BUTTONS */}
-
+              {/* BUTTONS */}
               <View style={styles.actionsRow}>
-
                 <Button
                   mode="contained"
                   icon="play"
-                  onPress={() =>
-                    openVideo(item.video_path)
-                  }
+                  onPress={() => openVideo(item.video_path)}
                   style={styles.watchButton}
                 >
                   Watch
@@ -326,40 +228,25 @@ export default function HomeScreen({
                   mode="outlined"
                   icon="delete"
                   textColor="red"
-                  onPress={() =>
-                    deleteVideo(item.video_path)
-                  }
+                  onPress={() => deleteVideo(item.video_path)}
                 >
                   Delete
                 </Button>
-
               </View>
-
             </Card.Content>
-
           </Card>
         )}
 
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* ========================================== */}
-      {/* FAB */}
-      {/* ========================================== */}
-
+      {/* FLOATING BUTTON */}
       <FAB
         icon="plus"
         style={styles.fab}
         label="New Animation"
-        onPress={() =>
-          navigation.navigate(
-            'CreateAnimation'
-          )
-        }
+        onPress={() => navigation.navigate('CreateAnimation')}
       />
-
     </View>
   );
 }
@@ -367,9 +254,7 @@ export default function HomeScreen({
 // ==========================================
 // STYLES
 // ==========================================
-
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -383,7 +268,6 @@ const styles = StyleSheet.create({
 
   headerContainer: {
     padding: 20,
-    paddingBottom: 10,
   },
 
   header: {
@@ -420,7 +304,6 @@ const styles = StyleSheet.create({
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
 
   motionText: {
@@ -429,7 +312,6 @@ const styles = StyleSheet.create({
   },
 
   framesText: {
-    marginTop: 5,
     color: 'gray',
   },
 
@@ -457,10 +339,9 @@ const styles = StyleSheet.create({
 
   fab: {
     position: 'absolute',
-    margin: 16,
     right: 0,
     bottom: 0,
+    margin: 16,
     backgroundColor: '#6200ee',
   },
-
 });
